@@ -27,30 +27,78 @@ import streamlit as st
 from openai import AzureOpenAI
 
 # ==============================================================================
-# CONFIGURAÇÃO DE SEGREDOS (.streamlit/secrets.toml)
+# CONFIGURAÇÃO DA PÁGINA (TEMA ALEGRE E COLORIDO)
 # ==============================================================================
-# Para que este aplicativo funcione localmente, crie uma pasta chamada '.streamlit'
-# na mesma pasta raiz onde este arquivo 'app.py' está salvo. Dentro de '.streamlit',
-# crie um arquivo chamado 'secrets.toml' contendo as suas credenciais no formato:
-#
-# [azure_openai]
-# endpoint = "https://seu-recurso.services.ai.azure.com/"
-# api_key = "sua_chave_de_api_aqui"
-# deployment_name = "gpt-4.1-mini"
-#
-# Em ambiente de produção (Streamlit Community Cloud), você pode configurar
-# essas mesmas variáveis na seção "Secrets" do painel de administração do app.
-# ==============================================================================
-
-# Configuração da Página do Streamlit
 st.set_page_config(
-    page_title="Extrator de Dados Inteligente | Azure OpenAI",
-    page_icon="🧠",
+    page_title="Extrator Super Colorido 🌈",
+    page_icon="🎨",
     layout="centered",
 )
 
+# Injeção de CSS personalizado para deixar o visual mais divertido, com gradientes e cartões coloridos
+st.markdown(
+    """
+    <style>
+    /* Fundo geral suave */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    /* Cabeçalho com gradiente vibrante */
+    .header-box {
+        background: linear-gradient(90deg, #FF4B2B 0%, #FF416C 50%, #7F00FF 100%);
+        padding: 25px;
+        border-radius: 20px;
+        color: white;
+        text-align: center;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
+    }
+    .header-box h1 {
+        margin: 0;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    .header-box p {
+        margin-top: 10px;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
 
-# Função para carregar as credenciais de forma segura do st.secrets
+    /* Estilização dos botões principais */
+    .stButton>button {
+        background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%);
+        color: #0d1b2a;
+        font-weight: bold;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        box-shadow: 0 4px 10px rgba(0,201,255,0.3);
+        transition: 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,201,255,0.5);
+    }
+
+    /* Estilização customizada das caixas de métricas */
+    div[data-testid="stMetric"] {
+        background: white;
+        padding: 15px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        border-left: 5px solid #FF416C;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+
+# ==============================================================================
+# CARREGAMENTO DE CREDENCIAIS (SECRETS OU FALLBACK)
+# ==============================================================================
 def carregar_credenciais():
   try:
     endpoint = st.secrets["azure_openai"]["endpoint"]
@@ -58,8 +106,6 @@ def carregar_credenciais():
     deployment_name = st.secrets["azure_openai"]["deployment_name"]
     return endpoint, api_key, deployment_name
   except Exception:
-    # Fallback didático caso o secrets.toml ainda não tenha sido configurado pelo aluno
-    # (Utilizando os dados fornecidos no escopo da instrução)
     return (
         "https://marcelomaffeis-05082026-resource.services.ai.azure.com/",
         "6t2pTNsmNafDyo53MDAFIrvvQRBZXP7dLcr5j3TLxMS34LQVq3ZUJQQJ99CHACHYHv6XJ3w3AAAAACOGT7os",
@@ -68,48 +114,51 @@ def carregar_credenciais():
 
 
 ENDPOINT, API_KEY, DEPLOYMENT_NAME = carregar_credenciais()
-
-# Limpando possíveis caracteres indesejados na URL do endpoint (como &quot;)
 ENDPOINT = ENDPOINT.replace("&quot;", "").strip()
 
 # Inicialização do cliente AzureOpenAI oficial
 client = AzureOpenAI(
     api_key=API_KEY,
-    api_version="2024-08-01-preview",  # Versão recomendada para endpoints modernos do Foundry/Azure OpenAI
+    api_version="2024-08-01-preview",
     azure_endpoint=ENDPOINT,
 )
 
 # ==============================================================================
-# INTERFACE DO USUÁRIO (UI)
+# INTERFACE DO USUÁRIO (VISUAL DIVERTIDO)
 # ==============================================================================
-st.title("🧠 Extrator de Dados Inteligente")
 st.markdown(
-    "Utilizando infraestrutura **Microsoft Azure OpenAI** para análise semântica"
-    " avançada."
+    """
+    <div class="header-box">
+        <h1>🎨 Extrator Super Colorido 🚀</h1>
+        <p>Transformando textos em insights mágicos com Azure OpenAI! ✨</p>
+    </div>
+""",
+    unsafe_allow_html=True,
 )
 
-st.divider()
-
-# Campo de texto para entrada
+# Campo de texto super amigável
 texto_usuario = st.text_area(
-    "Digite ou cole o texto que deseja analisar:",
+    "💬 **Cole ou digite sua história/mensagem abaixo:**",
     placeholder=(
-        "Ex: O cliente João Silva ligou extremamente irritado cobrando a entrega"
-        " do pedido #4589 até amanhã às 14h."
+        "Ex: A Ana e o Carlos vibraram muito com o lançamento do novo projeto"
+        " incrível na empresa hoje!"
     ),
     height=150,
 )
 
-# Botão de processamento
-if st.button("Processar Texto", type="primary", use_container_width=True):
+# Botão centralizado / destacado
+col_esq, col_centro, col_dir = st.columns([1, 2, 1])
+with col_centro:
+  processar = st.button(
+      "🪄 Processar com Magia!", use_container_width=True, type="primary"
+  )
+
+if processar:
   if not texto_usuario.strip():
-    st.warning("Por favor, digite algum texto antes de clicar em Processar.")
+    st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
   else:
-    with st.spinner(
-        "Analisando texto com o modelo Azure OpenAI (GPT-4.1-mini)..."
-    ):
+    with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
       try:
-        # Prompt de Sistema rígido exigindo formato estrito em JSON
         system_prompt = (
             "Você é um assistente especialista em extração de dados e análise"
             " de texto. Sua tarefa é analisar o texto fornecido pelo usuário e"
@@ -117,7 +166,7 @@ if st.button("Processar Texto", type="primary", use_container_width=True):
             " markdown adicionais, sem texto extra antes ou depois), contendo"
             " as seguintes chaves:\n"
             "1. 'sentimento': string indicando o sentimento geral (ex: Positivo,"
-            " Negativo, Neutro, etc.).\n"
+            " Negativo, Neutro, Animado, etc.).\n"
             "2. 'porcentagem_sentimento': número inteiro de 0 a 100 indicando a"
             " intensidade ou grau de certeza daquele sentimento.\n"
             "3. 'assunto_principal': string resumindo o tema central do texto.\n"
@@ -127,65 +176,62 @@ if st.button("Processar Texto", type="primary", use_container_width=True):
             " valores: 'Baixo', 'Medio' ou 'Alto'."
         )
 
-        # Chamada à API utilizando a biblioteca oficial do OpenAI configurada para Azure
         response = client.chat.completions.create(
             model=DEPLOYMENT_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": texto_usuario},
             ],
-            response_format={"type": "json_object"},  # Força resposta em JSON
-            temperature=0.1,  # Baixa temperatura para respostas determinísticas
+            response_format={"type": "json_object"},
+            temperature=0.2,
         )
 
-        # Extração do conteúdo JSON retornado pela API
         resposta_bruta = response.choices[0].message.content
         dados_json = json.loads(resposta_bruta)
 
-        st.success("Análise concluída com sucesso!")
+        st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
+        st.balloons()  # Efeito visual de balões subindo na tela
+
         st.divider()
 
         # ======================================================================
-        # EXIBIÇÃO ESTRUTURADA NA TELA
+        # EXIBIÇÃO COLORIDA DOS RESULTADOS
         # ======================================================================
-        st.subheader("📊 Resultados da Análise")
+        st.subheader("🌟 Resultados Extraídos")
 
-        # Exibição usando st.metric para destaque visual
         col1, col2, col3 = st.columns(3)
 
         with col1:
           st.metric(
-              label="Sentimento",
+              label="🌈 Sentimento",
               value=dados_json.get("sentimento", "N/A"),
           )
 
         with col2:
           porcentagem = dados_json.get("porcentagem_sentimento", 0)
-          st.metric(label="Intensidade", value=f"{porcentagem}%")
+          st.metric(label="⚡ Intensidade", value=f"{porcentagem}%")
 
         with col3:
           urgencia = dados_json.get("nivel_de_urgencia", "Baixo")
-          # Cores visuais dinâmicas baseadas na urgência (apenas estética complementar)
-          st.metric(label="Nível de Urgência", value=urgencia)
+          st.metric(label="🔥 Urgência", value=urgencia)
 
-        # Assunto Principal e Pessoas Citadas
-        st.markdown(f"**📌 Assunto Principal:**")
+        # Assunto Principal com estilo amigável
+        st.markdown("### 🎯 Assunto Principal")
         st.info(dados_json.get("assunto_principal", "Não identificado"))
 
-        st.markdown(f"**👥 Pessoas Citadas:**")
+        # Pessoas Citadas
+        st.markdown("### 👥 Pessoas Mencionadas")
         pessoas = dados_json.get("pessoas_citadas", [])
         if pessoas:
           for pessoa in pessoas:
-            st.markdown(f"- {pessoa}")
+            st.success(f"⭐ {pessoa}")
         else:
-          st.write("Nenhuma pessoa citada no texto.")
+          st.write("Nenhuma pessoa específica foi citada no texto.")
 
-        # Exibição do JSON bruto completo colapsável para auditoria técnica
-        with st.expander("Ver JSON Bruto Retornado pela API"):
+        # JSON bruto colapsável
+        with st.expander("🔍 Ver Detalhes Técnicos (JSON Bruto)"):
           st.json(dados_json)
 
       except Exception as e:
         st.error(
-            "Ocorreu um erro ao processar a requisição com o Azure OpenAI."
-        )
-        st.exception(e)
+            "Ops! Algo deu errado na comunicação com a API do Azure OpenAI.
