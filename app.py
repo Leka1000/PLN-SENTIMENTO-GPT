@@ -93,27 +93,25 @@ st.markdown(
 # ==============================================================================
 @st.cache_resource
 def obter_cliente_azure():
-  """Carrega as credenciais de forma segura e instancia o cliente AzureOpenAI."""
-  try:
-    endpoint = st.secrets["azure_openai"]["endpoint"]
-    api_key = st.secrets["azure_openai"]["api_key"]
-    deployment_name = st.secrets["azure_openai"]["deployment_name"]
-  except Exception:
-    # Fallback caso o secrets.toml não esteja configurado
-    endpoint = (
-        "https://marcelomaffeis-05082026-resource.services.ai.azure.com/"
+    """Carrega as credenciais de forma segura e instancia o cliente AzureOpenAI."""
+    try:
+        endpoint = st.secrets["azure_openai"]["endpoint"]
+        api_key = st.secrets["azure_openai"]["api_key"]
+        deployment_name = st.secrets["azure_openai"]["deployment_name"]
+    except Exception:
+        # Fallback caso o secrets.toml não esteja configurado
+        endpoint = "https://marcelomaffeis-05082026-resource.services.ai.azure.com/"
+        api_key = "6t2pTNsmNafDyo53MDAFIrvvQRBZXP7dLcr5j3TLxMS34LQVq3ZUJQQJ99CHACHYHv6XJ3w3AAAAACOGT7os"
+        deployment_name = "gpt-4.1-mini"
+
+    endpoint = endpoint.replace("&quot;", "").strip()
+
+    client = AzureOpenAI(
+        api_key=api_key,
+        api_version="2024-08-01-preview",
+        azure_endpoint=endpoint,
     )
-    api_key = "6t2pTNsmNafDyo53MDAFIrvvQRBZXP7dLcr5j3TLxMS34LQVq3ZUJQQJ99CHACHYHv6XJ3w3AAAAACOGT7os"
-    deployment_name = "gpt-4.1-mini"
-
-  endpoint = endpoint.replace("&quot;", "").strip()
-
-  client = AzureOpenAI(
-      api_key=api_key,
-      api_version="2024-08-01-preview",
-      azure_endpoint=endpoint,
-  )
-  return client, deployment_name
+    return client, deployment_name
 
 
 client_azure, DEPLOYMENT_NAME = obter_cliente_azure()
@@ -123,35 +121,30 @@ client_azure, DEPLOYMENT_NAME = obter_cliente_azure()
 # 3. FUNÇÃO DE PROCESSAMENTO DE IA
 # ==============================================================================
 def analisar_texto_com_ia(texto: str) -> dict:
-  """Envia o texto para o Azure OpenAI e retorna o dicionário JSON estruturado."""
-  system_prompt = (
-      "Você é um assistente especialista em extração de dados e análise de"
-      " texto. Sua tarefa é analisar o texto fornecido pelo usuário e retornar"
-      " EXATAMENTE um objeto JSON válido (sem blocos de código markdown"
-      " adicionais, sem texto extra antes ou depois), contendo as seguintes"
-      " chaves:\n"
-      "1. 'sentimento': string indicando o sentimento geral (ex: Positivo,"
-      " Negativo, Neutro, Animado, etc.).\n"
-      "2. 'porcentagem_sentimento': número inteiro de 0 a 100 indicando a"
-      " intensidade ou grau de certeza daquele sentimento.\n"
-      "3. 'assunto_principal': string resumindo o tema central do texto.\n"
-      "4. 'pessoas_citadas': lista de strings contendo os nomes das pessoas"
-      " mencionadas no texto (se houver, senão lista vazia []).\n"
-      "5. 'nivel_de_urgencia': string estritamente com um destes três valores:"
-      " 'Baixo', 'Medio' ou 'Alto'."
-  )
+    """Envia o texto para o Azure OpenAI e retorna o dicionário JSON estruturado."""
+    system_prompt = (
+        "Você é um assistente especialista em extração de dados e análise de texto. "
+        "Sua tarefa é analisar o texto fornecido pelo usuário e retornar EXATAMENTE "
+        "um objeto JSON válido (sem blocos de código markdown adicionais, sem texto "
+        "extra antes ou depois), contendo as seguintes chaves:\n"
+        "1. 'sentimento': string indicando o sentimento geral (ex: Positivo, Negativo, Neutro, Animado, etc.).\n"
+        "2. 'porcentagem_sentimento': número inteiro de 0 a 100 indicando a intensidade ou grau de certeza daquele sentimento.\n"
+        "3. 'assunto_principal': string resumindo o tema central do texto.\n"
+        "4. 'pessoas_citadas': lista de strings contendo os nomes das pessoas mencionadas no texto (se houver, senão lista vazia []).\n"
+        "5. 'nivel_de_urgencia': string estritamente com um destes três valores: 'Baixo', 'Medio' ou 'Alto'."
+    )
 
-  response = client_azure.chat.completions.create(
-      model=DEPLOYMENT_NAME,
-      messages=[
-          {"role": "system", "content": system_prompt},
-          {"role": "user", "content": texto},
-      ],
-      response_format={"type": "json_object"},
-      temperature=0.2,
-  )
+    response = client_azure.chat.completions.create(
+        model=DEPLOYMENT_NAME,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": texto},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.2,
+    )
 
-  return json.loads(response.choices[0].message.content)
+    return json.loads(response.choices[0].message.content)
 
 
 # ==============================================================================
@@ -169,28 +162,63 @@ st.markdown(
 
 # Inicializando o Session State para persistência de dados
 if "dados_json" not in st.session_state:
-  st.session_state.dados_json = None
+    st.session_state.dados_json = None
 
 texto_usuario = st.text_area(
     "💬 **Cole ou digite sua história/mensagem abaixo:**",
-    placeholder=(
-        "Ex: A Ana e o Carlos vibraram muito com o lançamento do novo projeto"
-        " incrível na empresa hoje!"
-    ),
+    placeholder="Ex: A Ana e o Carlos vibraram muito com o lançamento do novo projeto incrível na empresa hoje!",
     height=150,
 )
 
 col_esq, col_centro, col_dir = st.columns([1, 2, 1])
 with col_centro:
-  botao_processar = st.button(
-      "🪄 Processar com Magia!", use_container_width=True, type="primary"
-  )
+    botao_processar = st.button("🪄 Processar com Magia!", use_container_width=True, type="primary")
 
 if botao_processar:
-  if not texto_usuario.strip():
-    st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
-  else:
-    with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
-      try:
-        st.session_state.dados_json = analisar_texto_com_ia(texto_usuario)
-        st.success("🎉
+    if not texto_usuario.strip():
+        st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
+    else:
+        with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
+            try:
+                st.session_state.dados_json = analisar_texto_com_ia(texto_usuario)
+                st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
+                st.balloons()
+            except Exception as e:
+                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢")
+                st.exception(e)
+
+# ==============================================================================
+# 5. EXIBIÇÃO DOS RESULTADOS (PERSISTIDOS VIA SESSION STATE)
+# ==============================================================================
+if st.session_state.dados_json:
+    st.divider()
+    st.subheader("🌟 Resultados Extraídos")
+
+    dados = st.session_state.dados_json
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(label="🌈 Sentimento", value=dados.get("sentimento", "N/A"))
+
+    with col2:
+        porcentagem = dados.get("porcentagem_sentimento", 0)
+        st.metric(label="⚡ Intensidade", value=f"{porcentagem}%")
+
+    with col3:
+        urgencia = dados.get("nivel_de_urgencia", "Baixo")
+        st.metric(label="🔥 Urgência", value=urgencia)
+
+    st.markdown("### 🎯 Assunto Principal")
+    st.info(dados.get("assunto_principal", "Não identificado"))
+
+    st.markdown("### 👥 Pessoas Mencionadas")
+    pessoas = dados.get("pessoas_citadas", [])
+    if pessoas:
+        for pessoa in pessoas:
+            st.success(f"⭐ {pessoa}")
+    else:
+        st.write("Nenhuma pessoa específica foi citada no texto.")
+
+    with st.expander("🔍 Ver Detalhes Técnicos (JSON Bruto)"):
+        st.json(dados)
