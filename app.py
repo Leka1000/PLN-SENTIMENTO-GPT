@@ -1,3 +1,9 @@
+"""
+MIT License
+
+Copyright (c) 2026
+"""
+
 import json
 import streamlit as st
 from openai import AzureOpenAI
@@ -67,7 +73,7 @@ st.markdown(
 # 2. CREDENCIAIS DEFINIDAS DIRETAMENTE NO CÓDIGO
 # ==============================================================================
 minha_chave = "1gsyJYiGIr1rIjIm6heIq96VWJI5gMgXeXCaYCHx5WeeWGm3AMYvJQQJ99CJACHYHv6XJ3w3AAAAACOGUF3S"
-meu_endpoint = "https://marcelomaffeis-7430-resource.services.ai.azure.com/openai/v1"
+meu_endpoint = "[https://marcelomaffeis-7430-resource.services.ai.azure.com/openai/v1](https://marcelomaffeis-7430-resource.services.ai.azure.com/openai/v1)"
 meu_modelo = "gpt-4.1-mini"
 
 # ==============================================================================
@@ -182,5 +188,3 @@ if st.session_state.dados_json:
 
     with st.expander("🔍 Ver Detalhes Técnicos (JSON Bruto)"):
         st.json(dados)
-
-```
