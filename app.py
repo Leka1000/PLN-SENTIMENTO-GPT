@@ -82,46 +82,47 @@ st.markdown(
         box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         border-left: 5px solid #FF416C;
     }
+    /* Personalização da barra lateral */
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+        border-right: 1px solid #e0e0e0;
+    }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-
 # ==============================================================================
-# 2. GERENCIAMENTO DE CREDENCIAIS E CLIENTE AZURE
+# 2. BARRA LATERAL - CONFIGURAÇÕES E CREDENCIAIS DO MICROSOFT FOUNDRY
 # ==============================================================================
-@st.cache_resource
-def obter_cliente_azure():
-    """Carrega as credenciais de forma segura e instancia o cliente AzureOpenAI."""
-    try:
-        endpoint = st.secrets["azure_openai"]["endpoint"]
-        api_key = st.secrets["azure_openai"]["api_key"]
-        deployment_name = st.secrets["azure_openai"]["deployment_name"]
-    except Exception:
-        # Fallback caso o secrets.toml não esteja configurado
-        endpoint = "https://marcelomaffeis-05082026-resource.services.ai.azure.com/"
-        api_key = "6t2pTNsmNafDyo53MDAFIrvvQRBZXP7dLcr5j3TLxMS34LQVq3ZUJQQJ99CHACHYHv6XJ3w3AAAAACOGT7os"
-        deployment_name = "gpt-4.1-mini"
+st.sidebar.title("⚙️ Configurações & Conexão")
+st.sidebar.markdown(
+    "Insira suas credenciais do Microsoft Foundry com segurança para estabelecer a conexão."
+)
 
-    endpoint = endpoint.replace("&quot;", "").strip()
-
-    client = AzureOpenAI(
-        api_key=api_key,
-        api_version="2024-08-01-preview",
-        azure_endpoint=endpoint,
-    )
-    return client, deployment_name
-
-
-client_azure, DEPLOYMENT_NAME = obter_cliente_azure()
-
+minha_chave = st.sidebar.text_input("minha_chave (API Key)", type="password")
+meu_endpoint = st.sidebar.text_input(
+    "meu_endpoint", 
+    placeholder="https://seu-recurso.services.ai.azure.com/"
+)
+meu_modelo = st.sidebar.text_input(
+    "meu_modelo", 
+    value="gpt-4.1-mini"
+)
 
 # ==============================================================================
 # 3. FUNÇÃO DE PROCESSAMENTO DE IA
 # ==============================================================================
-def analisar_texto_com_ia(texto: str) -> dict:
-    """Envia o texto para o Azure OpenAI e retorna o dicionário JSON estruturado."""
+def analisar_texto_com_ia(texto: str, chave: str, endpoint: str, modelo: str) -> dict:
+    """Instancia o cliente AzureOpenAI dinamicamente e retorna o JSON estruturado."""
+    endpoint_limpo = endpoint.replace("&quot;", "").strip()
+    
+    client_azure = AzureOpenAI(
+        api_key=chave.strip(),
+        api_version="2024-08-01-preview",
+        azure_endpoint=endpoint_limpo,
+    )
+
     system_prompt = (
         "Você é um assistente especialista em extração de dados e análise de texto. "
         "Sua tarefa é analisar o texto fornecido pelo usuário e retornar EXATAMENTE "
@@ -135,7 +136,7 @@ def analisar_texto_com_ia(texto: str) -> dict:
     )
 
     response = client_azure.chat.completions.create(
-        model=DEPLOYMENT_NAME,
+        model=modelo.strip(),
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": texto},
@@ -160,6 +161,10 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Alerta caso faltem credenciais na barra lateral
+if not minha_chave or not meu_endpoint or not meu_modelo:
+    st.warning("⚠️ Por favor, preencha **minha_chave**, **meu_endpoint** e **meu_modelo** na barra lateral para habilitar a mágica do extrator.")
+
 # Inicializando o Session State para persistência de dados
 if "dados_json" not in st.session_state:
     st.session_state.dados_json = None
@@ -175,16 +180,20 @@ with col_centro:
     botao_processar = st.button("🪄 Processar com Magia!", use_container_width=True, type="primary")
 
 if botao_processar:
-    if not texto_usuario.strip():
+    if not minha_chave or not meu_endpoint or not meu_modelo:
+        st.error("🚨 Faltam credenciais! Insira sua `minha_chave`, `meu_endpoint` e `meu_modelo` na barra lateral.")
+    elif not texto_usuario.strip():
         st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
     else:
         with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
             try:
-                st.session_state.dados_json = analisar_texto_com_ia(texto_usuario)
+                st.session_state.dados_json = analisar_texto_com_ia(
+                    texto_usuario, minha_chave, meu_endpoint, meu_modelo
+                )
                 st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
                 st.balloons()
             except Exception as e:
-                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢")
+                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢 Verifique se suas credenciais estão corretas.")
                 st.exception(e)
 
 # ==============================================================================
