@@ -148,4 +148,52 @@ with col_centro:
 if botao_processar:
     if not minha_chave or not meu_endpoint or not meu_modelo:
         st.error("🚨 Por favor, preencha todos os campos de configuração (**API Key**, **Endpoint** e **Modelo**) na barra lateral!")
-    elif not
+    elif not texto_usuario.strip():
+        st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
+    else:
+        with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
+            try:
+                st.session_state.dados_json = analisar_texto_com_ia(
+                    texto_usuario, minha_chave, meu_endpoint, meu_modelo
+                )
+                st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
+                st.balloons()
+            except Exception as e:
+                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢 Verifique se suas credenciais estão corretas.")
+                st.exception(e)
+
+# ==============================================================================
+# 5. EXIBIÇÃO DOS RESULTADOS
+# ==============================================================================
+if st.session_state.dados_json:
+    st.divider()
+    st.subheader("🌟 Resultados Extraídos")
+
+    dados = st.session_state.dados_json
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric(label="🌈 Sentimento", value=dados.get("sentimento", "N/A"))
+
+    with col2:
+        porcentagem = dados.get("porcentagem_sentimento", 0)
+        st.metric(label="⚡ Intensidade", value=f"{porcentagem}%")
+
+    with col3:
+        urgencia = dados.get("nivel_de_urgencia", "Baixo")
+        st.metric(label="🔥 Urgência", value=urgencia)
+
+    st.markdown("### 🎯 Assunto Principal")
+    st.info(dados.get("assunto_principal", "Não identificado"))
+
+    st.markdown("### 👥 Pessoas Mencionadas")
+    pessoas = dados.get("pessoas_citadas", [])
+    if pessoas:
+        for pessoa in pessoas:
+            st.success(f"⭐ {pessoa}")
+    else:
+        st.write("Nenhuma pessoa específica foi citada no texto.")
+
+    with st.expander("🔍 Ver Detalhes Técnicos (JSON Bruto)"):
+        st.json(dados)
