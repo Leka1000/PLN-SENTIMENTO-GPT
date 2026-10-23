@@ -76,12 +76,13 @@ st.markdown(
 # ==============================================================================
 # 2. BARRA LATERAL - ENTRADA DE CREDENCIAIS PELO USUÁRIO
 # ==============================================================================
+st.server_name = "⚙️ Configurações & Conexão"
 st.sidebar.title("⚙️ Configurações & Conexão")
-st.sidebar.markdown("Insira suas informações da Azure OpenAI abaixo:")
+st.sidebar.markdown("Insira suas informações do Microsoft Foundry / Azure OpenAI abaixo:")
 
 minha_chave = st.sidebar.text_input("API Key (Chave)", type="password", placeholder="Cole sua chave aqui")
 meu_endpoint = st.sidebar.text_input("Endpoint", placeholder="https://seu-recurso.services.ai.azure.com")
-meu_modelo = st.sidebar.text_input("Nome do Modelo", value="gpt-4.1-mini")
+meu_modelo = st.sidebar.text_input("Nome da Implantação (Deployment Name)", value="gpt-4o-mini", help="Insira o nome exato dado ao modelo no painel do Microsoft Foundry.")
 
 # ==============================================================================
 # 3. FUNÇÃO DE PROCESSAMENTO DE IA
@@ -89,9 +90,10 @@ meu_modelo = st.sidebar.text_input("Nome do Modelo", value="gpt-4.1-mini")
 def analisar_texto_com_ia(texto: str, chave: str, endpoint: str, modelo: str) -> dict:
     endpoint_limpo = endpoint.replace("&quot;", "").strip().rstrip("/")
     
+    # Inicialização compatível com Azure OpenAI / Microsoft Foundry
     client_azure = AzureOpenAI(
         api_key=chave.strip(),
-        api_version="2024-08-01-preview",
+        api_version="2024-10-01-preview",  # Versão recomendada para Foundry/Azure
         azure_endpoint=endpoint_limpo,
     )
 
@@ -126,7 +128,7 @@ st.markdown(
     """
     <div class="header-box">
         <h1>🎨 Extrator Super Colorido 🚀</h1>
-        <p>Transformando textos em insights mágicos com Azure OpenAI! ✨</p>
+        <p>Transformando textos em insights mágicos com o Microsoft Foundry! ✨</p>
     </div>
 """,
     unsafe_allow_html=True,
@@ -151,7 +153,7 @@ if botao_processar:
     elif not texto_usuario.strip():
         st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
     else:
-        with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
+        with st.spinner("🦄 Mágica acontecendo nos servidores do Microsoft Foundry..."):
             try:
                 st.session_state.dados_json = analisar_texto_com_ia(
                     texto_usuario, minha_chave, meu_endpoint, meu_modelo
@@ -159,7 +161,7 @@ if botao_processar:
                 st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
                 st.balloons()
             except Exception as e:
-                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢 Verifique se suas credenciais estão corretas.")
+                st.error("Ops! Algo deu errado na comunicação com a API do Microsoft Foundry. 😢 Verifique se suas credenciais e o nome da implantação estão corretos.")
                 st.exception(e)
 
 # ==============================================================================
