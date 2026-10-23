@@ -1,12 +1,3 @@
-Aqui está o código atualizado. Foram removidos os campos da barra lateral para preenchimento manual e as credenciais (`minha_chave`, `meu_endpoint` e `meu_modelo`) foram inseridas diretamente no código conforme solicitado.
-
-```python
-"""
-MIT License
-
-Copyright (c) 2026
-"""
-
 import json
 import streamlit as st
 from openai import AzureOpenAI
