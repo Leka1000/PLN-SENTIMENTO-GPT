@@ -64,23 +64,30 @@ st.markdown(
         box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         border-left: 5px solid #FF416C;
     }
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+        border-right: 1px solid #e0e0e0;
+    }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
 # ==============================================================================
-# 2. CREDENCIAIS DEFINIDAS DIRETAMENTE NO CÓDIGO
+# 2. BARRA LATERAL - ENTRADA DE CREDENCIAIS PELO USUÁRIO
 # ==============================================================================
-minha_chave = "1gsyJYiGIr1rIjIm6heIq96VWJI5gMgXeXCaYCHx5WeeWGm3AMYvJQQJ99CJACHYHv6XJ3w3AAAAACOGUF3S"
-meu_endpoint = "[https://marcelomaffeis-7430-resource.services.ai.azure.com/openai/v1](https://marcelomaffeis-7430-resource.services.ai.azure.com/openai/v1)"
-meu_modelo = "gpt-4.1-mini"
+st.sidebar.title("⚙️ Configurações & Conexão")
+st.sidebar.markdown("Insira suas informações da Azure OpenAI abaixo:")
+
+minha_chave = st.sidebar.text_input("API Key (Chave)", type="password", placeholder="Cole sua chave aqui")
+meu_endpoint = st.sidebar.text_input("Endpoint", placeholder="https://seu-recurso.services.ai.azure.com")
+meu_modelo = st.sidebar.text_input("Nome do Modelo", value="gpt-4.1-mini")
 
 # ==============================================================================
 # 3. FUNÇÃO DE PROCESSAMENTO DE IA
 # ==============================================================================
 def analisar_texto_com_ia(texto: str, chave: str, endpoint: str, modelo: str) -> dict:
-    endpoint_limpo = endpoint.replace("&quot;", "").strip()
+    endpoint_limpo = endpoint.replace("&quot;", "").strip().rstrip("/")
     
     client_azure = AzureOpenAI(
         api_key=chave.strip(),
@@ -139,52 +146,6 @@ with col_centro:
     botao_processar = st.button("🪄 Processar com Magia!", use_container_width=True, type="primary")
 
 if botao_processar:
-    if not texto_usuario.strip():
-        st.warning("⚠️ Opa! Escreva alguma coisa legal antes de clicar no botão!")
-    else:
-        with st.spinner("🦄 Mágica acontecendo nos servidores da Microsoft..."):
-            try:
-                st.session_state.dados_json = analisar_texto_com_ia(
-                    texto_usuario, minha_chave, meu_endpoint, meu_modelo
-                )
-                st.success("🎉 ¡Tcha-ram! Análise concluída com sucesso!")
-                st.balloons()
-            except Exception as e:
-                st.error("Ops! Algo deu errado na comunicação com a API do Azure OpenAI. 😢 Verifique se as credenciais estão corretas.")
-                st.exception(e)
-
-# ==============================================================================
-# 5. EXIBIÇÃO DOS RESULTADOS
-# ==============================================================================
-if st.session_state.dados_json:
-    st.divider()
-    st.subheader("🌟 Resultados Extraídos")
-
-    dados = st.session_state.dados_json
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric(label="🌈 Sentimento", value=dados.get("sentimento", "N/A"))
-
-    with col2:
-        porcentagem = dados.get("porcentagem_sentimento", 0)
-        st.metric(label="⚡ Intensidade", value=f"{porcentagem}%")
-
-    with col3:
-        urgencia = dados.get("nivel_de_urgencia", "Baixo")
-        st.metric(label="🔥 Urgência", value=urgencia)
-
-    st.markdown("### 🎯 Assunto Principal")
-    st.info(dados.get("assunto_principal", "Não identificado"))
-
-    st.markdown("### 👥 Pessoas Mencionadas")
-    pessoas = dados.get("pessoas_citadas", [])
-    if pessoas:
-        for pessoa in pessoas:
-            st.success(f"⭐ {pessoa}")
-    else:
-        st.write("Nenhuma pessoa específica foi citada no texto.")
-
-    with st.expander("🔍 Ver Detalhes Técnicos (JSON Bruto)"):
-        st.json(dados)
+    if not minha_chave or not meu_endpoint or not meu_modelo:
+        st.error("🚨 Por favor, preencha todos os campos de configuração (**API Key**, **Endpoint** e **Modelo**) na barra lateral!")
+    elif not
